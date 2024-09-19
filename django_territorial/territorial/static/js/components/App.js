@@ -1,28 +1,28 @@
 import Canvas from './Canvas.js';
 import { setupWebSocket } from '../utils/websocket.js';
-import { applyInitialState, updateGraphics, updateSquareInfo } from '../utils/pixiHelpers.js';
+import { applyMap, updateGraphics, updateSquareInfo } from '../utils/pixiHelpers.js';
 
-const { useEffect, useState } = React;
+const { useEffect, useState, createElement } = React;
 
 export default function App() {
     const [app, setApp] = useState(null);
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
-        const newSocket = setupWebSocket(handleSocketMessage);
-        setSocket(newSocket);
+        if (app) {
+            const newSocket = setupWebSocket(handleSocketMessage);
+            setSocket(newSocket);
 
-        return () => {
-            if (newSocket) newSocket.close();
-        };
-    }, []);
+            return () => {
+                if (newSocket) newSocket.close();
+            };
+        }
+    }, [app]);  // Only set up WebSocket after app is initialized
 
     const handleSocketMessage = (e) => {
         const data = JSON.parse(e.data);
-        if (data.type === 'initial_state') {
-            applyInitialState(app, data);
-        } else if (data.type === 'update') {
-            // Handle updates
+        if (data.type === 'map') {
+            applyMap(app, data.grid);
         } else if (data.type === 'square_info') {
             updateSquareInfo(app, data.square_info);
         } else if (data.type === 'grid_update') {
@@ -30,5 +30,5 @@ export default function App() {
         }
     };
 
-    return React.createElement(Canvas, { setApp: setApp });
+    return createElement(Canvas, { setApp: setApp });
 }

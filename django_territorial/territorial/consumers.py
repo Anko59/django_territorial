@@ -6,7 +6,7 @@ import time
 import zlib
 
 import numpy as np
-from territorial.models import InitialState, SquareInfoMessage, SquareInfo, GridUpdateMessage
+from territorial.models import MapMessage, SquareInfoMessage, SquareInfo, GridUpdateMessage
 from territorial.services.game import Game
 from collections import defaultdict
 
@@ -32,7 +32,7 @@ class SquareConsumer(AsyncWebsocketConsumer):
         await self.accept()
         logger.info("WebSocket connection established")
         self.game = Game()
-        await self.send_initial_state()
+        await self.send_map()
         self.tasks = self.create_background_tasks()
 
     async def disconnect(self, close_code):
@@ -79,12 +79,12 @@ class SquareConsumer(AsyncWebsocketConsumer):
                 self.log_error("send_square_info", e)
             await asyncio.sleep(self.UPDATE_INTERVALS["square_info"])
 
-    async def send_initial_state(self):
+    async def send_map(self):
         try:
-            await self.timed_execution("send_initial_state", self._send_initial_state)
-            logger.info("Initial state sent successfully")
+            await self.timed_execution("send_map", self._send_map)
+            logger.info("Map sent successfully")
         except Exception as e:
-            self.log_error("send_initial_state", e)
+            self.log_error("send_map", e)
 
     async def timed_execution(self, name, func):
         start_time = time.time()
@@ -115,18 +115,12 @@ class SquareConsumer(AsyncWebsocketConsumer):
         message = SquareInfoMessage(square_info=square_info)
         await self.send(text_data=message.model_dump_json())
 
-    async def _send_initial_state(self):
-        initial_state = InitialState(
-            width=self.game.state.width,
-            height=self.game.state.height,
-            cells=[
-                (x, y, self.game.state.grid[y][x])
-                for y in range(self.game.state.height)
-                for x in range(self.game.state.width)
-                if self.game.state.grid[y][x] != 0
-            ],
-        )
-        await self.send(text_data=initial_state.model_dump_json())
+    async def _send_map(self):
+        color_grid = self.game.map.get_color_map()
+        flat_grid = color_grid.flatten().astype(np.uint8).tobytes()
+        compressed_grid = zlib.compress(flat_grid)
+        map_message = MapMessage(grid=compressed_grid.hex())
+        await self.send(text_data=map_message.model_dump_json())
 
     async def _send_grid_update(self):
         color_grid = self.game.get_color_grid()

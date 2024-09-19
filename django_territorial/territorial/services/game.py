@@ -1,7 +1,7 @@
-import random
 import numpy as np
 from loguru import logger
 from territorial.models import GameState, Square, AttackMovement
+from territorial.services.map import Map
 from scipy.signal import convolve2d
 from collections import Counter
 
@@ -9,17 +9,33 @@ from collections import Counter
 class Game:
     def __init__(self, width: int = 600, height: int = 400, num_squares: int = 200):
         self.state: GameState = GameState(
-            width=width, height=height, grid=np.zeros((height, width), dtype=np.uint32), num_squares=num_squares, squares=[]
+            width=width,
+            height=height,
+            grid=np.zeros((height, width), dtype=np.uint32),
+            num_squares=num_squares,
+            squares=[],
+            color_grid=np.zeros((height, width, 4), dtype=np.uint8),
         )
+        self.map = Map(width, height)
+        self.state.grid[~self.map.get_accessibility_mask()] = -1
         self.state.squares = [self.create_random_square(i) for i in range(self.state.num_squares)]
         self.id_squares_map = {square.id: square for square in self.state.squares}
 
         self.neighbors = np.array([])
 
     def create_random_square(self, square_id: int) -> Square:
-        color = np.array([np.random.randint(0, 256, 3).tolist() + [255]], dtype=np.uint8)
-        start_x = random.randint(0, self.state.width - 1)
-        start_y = random.randint(0, self.state.height - 1)
+        color = np.random.randint(0, 256, (1, 4), dtype=np.uint8)
+        color[0, 3] = 125  # Set alpha to 125
+
+        # Create a mask of accessible positions
+        accessible_mask = self.state.grid != -1
+
+        # Get the indices of accessible positions
+        accessible_indices = np.argwhere(accessible_mask)
+
+        # Randomly choose a starting position from accessible positions
+        start_y, start_x = accessible_indices[np.random.randint(len(accessible_indices))]
+
         square = Square(
             id=square_id + 1,
             color=color,
@@ -35,6 +51,7 @@ class Game:
 
     def capture_pixels(self, pixels: np.ndarray, square: Square):
         self.state.grid[pixels[:, 0], pixels[:, 1]] = square.id
+        self.state.color_grid[pixels[:, 0], pixels[:, 1]] = square.color
 
     def _update_attack_movement(self, attack_movement: AttackMovement) -> None:
         square = self.get_square_from_id(attack_movement.source)
@@ -111,10 +128,7 @@ class Game:
                 square.area = value_counts[square.id]
 
     def get_color_grid(self) -> np.ndarray:
-        color_grid = np.full((self.state.height, self.state.width, 4), 255)
-        for square in self.state.squares:
-            color_grid[self.state.grid == square.id] = square.color
-        return color_grid
+        return self.state.color_grid
 
     def find_all_possible_targets(self) -> np.ndarray:
         grid = self.state.grid
@@ -145,6 +159,9 @@ class Game:
         # Stack all pairs and find unique ones
         all_pairs = np.vstack(all_pairs)
         unique_pairs = np.unique(all_pairs, axis=0)
+
+        # Filter out unaccessible positions
+        unique_pairs = unique_pairs[(unique_pairs[:, 0] != -1) & (unique_pairs[:, 1] != -1)]
 
         return unique_pairs
 

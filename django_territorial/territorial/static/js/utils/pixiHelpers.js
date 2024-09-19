@@ -1,14 +1,17 @@
-export function applyInitialState(app, data) {
+export function applyMap(app, data) {
+    if (!app || !app.stage) return;
     const graphics = app.stage.getChildAt(0).getChildAt(0);
     graphics.clear();
-    data.cells.forEach(([x, y, color]) => {
-        graphics.beginFill(color);
-        graphics.drawRect(x, y, 1, 1);
-        graphics.endFill();
-    });
+    const gridData = new Uint8Array(data.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const imageData = pako.inflate(gridData);
+    const mapTexture = PIXI.Texture.fromBuffer(imageData, 600, 400);
+    const mapSprite = new PIXI.Sprite(mapTexture);
+    graphics.addChild(mapSprite);
+    mapSprite.position.set(0, 0);
 }
 
 export function updateGraphics(app, gridBuffer) {
+    if (!app || !app.stage) return;
     const graphics = app.stage.getChildAt(0).getChildAt(0);
     graphics.clear();
     const gridData = new Uint8Array(gridBuffer.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
@@ -27,6 +30,7 @@ export function updateGraphics(app, gridBuffer) {
 }
 
 export function updateSquareInfo(app, squareInfo) {
+    if (!app || !app.stage) return;
     const textContainer = app.stage.getChildAt(0).getChildAt(1);
     textContainer.removeChildren();
 

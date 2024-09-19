@@ -134,19 +134,13 @@ class GameState(BaseModel):
     width: int
     height: int
     grid: NumpyArray[int]
+    color_grid: NumpyArray[int]
     num_squares: int
     squares: list[Square]
     attack_movements: list[AttackMovement] = []
 
     class Config:
         arbitrary_types_allowed = True
-
-
-class InitialState(BaseModel):
-    type: str = "initial_state"
-    width: int
-    height: int
-    cells: list[tuple[int, int, int]]
 
 
 class SquareInfo(BaseModel):
@@ -162,4 +156,9 @@ class SquareInfoMessage(BaseModel):
 
 class GridUpdateMessage(BaseModel):
     type: str = "grid_update"
+    grid: str
+
+
+class MapMessage(BaseModel):
+    type: str = "map"
     grid: str

@@ -113,6 +113,7 @@ def main():
 
     # Save results to a file
     results_dir = "performance_results"
+    results_dir = os.path.join(os.path.dirname(__file__), results_dir)
     os.makedirs(results_dir, exist_ok=True)
     timestamp = time.strftime("%Y%m%d-%H%M%S")
     filename = os.path.join(results_dir, f"backend_performance_{timestamp}.json")

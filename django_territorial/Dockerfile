@@ -8,9 +8,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-# Copy the entire project directory
-COPY ./django_territorial /app
-
+COPY ./django_territorial/pyproject.toml ./django_territorial/poetry.lock ./
 RUN poetry install --no-root
 
 EXPOSE 8000

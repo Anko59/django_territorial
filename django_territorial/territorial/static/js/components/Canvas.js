@@ -1,4 +1,4 @@
-const { useEffect, useRef } = React;
+const { useEffect, useRef, createElement } = React;
 
 export default function Canvas({ setApp }) {
     const canvasRef = useRef(null);
@@ -45,5 +45,5 @@ export default function Canvas({ setApp }) {
         };
     }, []);
 
-    return React.createElement('div', { ref: canvasRef });
+    return createElement('div', { ref: canvasRef });
 }

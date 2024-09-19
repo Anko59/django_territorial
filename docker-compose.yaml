@@ -9,6 +9,8 @@ services:
       - "traefik.http.services.django_territorial.loadbalancer.server.port=8000"
     networks:
       - traefik-public
+    volumes:
+      - ./django_territorial:/app
 
   traefik:
     image: traefik:v2.9
