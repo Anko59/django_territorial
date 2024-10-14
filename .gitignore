@@ -127,6 +127,11 @@ cython_debug/
 
 django_territorial/territorial/tests/*.json
 django_territorial/territorial/tests/performance_results/*.json
+django_territorial/static
+django_territorial/staticfiles
+django_territorial/territorial/services/*.pkl
+django_territorial/territorial/services/*.csv
+django_territorial/territorial/services/map_cache
 
 
 # Exclude all zip files

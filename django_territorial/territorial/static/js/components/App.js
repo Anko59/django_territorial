@@ -1,6 +1,6 @@
 import Canvas from './Canvas.js';
 import { setupWebSocket } from '../utils/websocket.js';
-import { applyMap, updateGraphics, updateSquareInfo } from '../utils/pixiHelpers.js';
+import { applyMap, updateGraphics, updateSquareInfo, updateBoats } from '../utils/pixiHelpers.js';
 
 const { useEffect, useState, createElement } = React;
 
@@ -27,6 +27,8 @@ export default function App() {
             updateSquareInfo(app, data.square_info);
         } else if (data.type === 'grid_update') {
             updateGraphics(app, data.grid);
+        } else if (data.type === 'boat') {
+            updateBoats(app, data.boats);
         }
     };
 
